@@ -1,0 +1,16 @@
+% Gains
+Kp = 10;
+Kd = 10;
+
+% Inertia Tensor
+J = eye(3) + [0     0.1     0;
+              0.1   0       0.2;
+              0     0.2     0];
+                  
+% max runtime
+T_max = 600;
+t_step = 0.01;
+
+% max parameters/limits
+V_MAX = 1;      % m/s
+A_MAX = 4;      % m/s^2
