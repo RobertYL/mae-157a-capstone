@@ -1,16 +1,26 @@
-function [order, min_dist] = tsp_dp(edges)
+function [order,min_dist] = tsp_dp(edges,source)
 % TSP_DP Traveling salesman problem dynamic programming solution
 %   Given a weighted, dense graph EDGES, find the order of nodes for the
-%   shortest path
+%   shortest tour starting from SOURCE
+arguments
+    edges (:,:) double
+    source (1,1) double
+end
 
 n = size(edges,1);
 if n > 25
     warning("Greater than 25 nodes, algorithm may be slow")
 end
+if source < 1 || source > n
+    error("Invalid source index")
+end
 
 dist = inf(2^n-1, n);
 par = zeros(2^n-1, n);
 for mask = 1:(2^n-1)
+    if source ~= 0 && bitget(mask,source) == 0
+        continue;
+    end
     vis = find(bitget(mask,1:n));
 
     if length(vis) == 1
@@ -36,15 +46,15 @@ for mask = 1:(2^n-1)
 end
 
 min_dist = inf;
-order = zeros(1,n);
+order = zeros(1,n+1);
+order(n+1) = source;
 mask = 2^n-1;
 for i = 1:n
-    if dist(mask,i) < min_dist
-        min_dist = dist(mask,i);
+    if dist(mask,i) + edges(i,source) < min_dist
+        min_dist = dist(mask,i) + edges(i,source);
         order(n) = i;
     end
 end
-
 for i = n-1:-1:1
     order(i) = par(mask,order(i+1));
     mask = bitset(mask,order(i+1),0);
