@@ -46,12 +46,11 @@ for mask = 1:(2^n-1)
 end
 
 min_dist = inf;
-order = zeros(1,n+1);
-order(n+1) = source;
+order = zeros(1,n);
 mask = 2^n-1;
 for i = 1:n
-    if dist(mask,i) + edges(i,source) < min_dist
-        min_dist = dist(mask,i) + edges(i,source);
+    if dist(mask,i) < min_dist
+        min_dist = dist(mask,i);
         order(n) = i;
     end
 end

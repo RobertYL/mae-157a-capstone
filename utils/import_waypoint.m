@@ -3,12 +3,13 @@
 % assumes the waypoints are given in order (for now)
 
 function waypoint_map = import_waypoint(filename)
-    raw_waypoint_map = readmatrix(filename);
+    waypoint_table = readtable(filename,VariableNamingRule="preserve");
+    [~,ord] = sort(waypoint_table.("seq num"));
     
     % parse into X, Y, Z
-    waypoint_X = raw_waypoint_map(1,:);
-    waypoint_Y = raw_waypoint_map(2,:);
-    waypoint_Z = raw_waypoint_map(3,:);
+    waypoint_X = waypoint_table.x(ord)';
+    waypoint_Y = waypoint_table.y(ord)';
+    waypoint_Z = waypoint_table.z(ord)';
     
     waypoint_map = [waypoint_X; waypoint_Y; waypoint_Z];
 end
