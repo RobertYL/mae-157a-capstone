@@ -1,2 +1,5 @@
 # MATLAB artifacts
 **/*.asv
+
+# outputs
+figs/

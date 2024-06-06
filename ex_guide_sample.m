@@ -1,4 +1,4 @@
-%% Waypoint Sequencing Example
+%% Guidance Example -- Sequencing Waypoint Samples
 
 % finds optimal waypoint sequence using example waypoints
 % assumes drone starts at (0,0,1) and ends when last waypoint is reached
