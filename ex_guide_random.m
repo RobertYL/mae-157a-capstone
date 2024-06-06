@@ -12,6 +12,7 @@ for i = 1:length(n)
     tic
     [order,min_dist] = tsp_dp(adj_matrix,1);
     toc
+    [order_nn,dist_nn] = tsp_nn(adj_matrix,1);
 
     rand_dist = zeros(1,m);
     for j = 1:m
@@ -22,6 +23,8 @@ for i = 1:length(n)
     histogram(rand_dist);
     hold on;
     xline(min_dist,'--r',sprintf("(d_{min}) %.1f",min_dist), ...
+        LineWidth=1.5);
+    xline(dist_nn,'--r',sprintf("(d_{nn}) %.1f",dist_nn), ...
         LineWidth=1.5);
     xline(mean(rand_dist),'--r', ...
         sprintf("%.1f",mean(rand_dist)), ...
@@ -38,6 +41,7 @@ end
 %% viz
 
 path = waypoints(:,order);
+path_nn = waypoints(:,order_nn);
 dist = vecnorm(diff(path,1,2));
 frms = floor(dist.*6);
 viz_path = zeros(3,sum(frms)+1);
@@ -57,7 +61,8 @@ daz = 4;
 fig = figure(Position=[200,200,560*1.5,420*1.5]);
 scatter3(path(1,:),path(2,:),path(3,:),'o');
 hold on
-plt3 = plot3(path(1,:),path(2,:),path(3,:),'r');
+plt3 = plot3(path(1,:),path(2,:),path(3,:),'r',LineWidth=1.5);
+plt3_nn = plot3(path_nn(1,:),path_nn(2,:),path_nn(3,:),'--',Color=[0.3 0.5 0.3],LineWidth=1.5);
 hold off
 
 view(-65,20);
@@ -73,6 +78,8 @@ f = getframe(fig);
 [im3,~] = rgb2ind(f.cdata,256,'nodither');
 im(1,1,1,k_max) = 0;
 
+set(plt3_nn,XData=0,YData=0,ZData=0);
+
 for k = 1:k_max+dk
     idx = max(1,k-dk):min(k_max,k);
 
@@ -85,6 +92,7 @@ end
 
 % fig
 set(plt3,XData=path(1,:),YData=path(2,:),ZData=path(3,:));
+set(plt3_nn,XData=path_nn(1,:),YData=path_nn(2,:),ZData=path_nn(3,:));
 
 im2(1,1,1,360/daz) = 0;
 
@@ -96,6 +104,7 @@ for k = 1:360/daz
     im2(:,:,1,k) = rgb2ind(f.cdata,map,'nodither');
 end
 set(plt3,XData=0,YData=0,ZData=0);
+set(plt3_nn,XData=0,YData=0,ZData=0);
 
 im3(1,1,1,360/daz) = 0;
 
