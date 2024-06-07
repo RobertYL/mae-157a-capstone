@@ -1,37 +1,40 @@
-% Kp_range = 12:1:22;
-% Kd_range = 12:1:22;
-% Simulation didn't converge until Kp=19, Kd didn't matter.
-% Next step would be to test from 18, in 0.1 increments.
+%% Kp/Kd Optimization Notes
+% Monte Carlo simulation: randomly generated waypoints, ordered using
+% tsp_dp.m. Run for 100 trials per "set". Optimized for total distance
+% error across all waypoints in each set.
+% 
+% Kp_range = 1:1:25;
+% Kd_range = 1:1:25;
+% It seems that for some waypoint edge cases, gains of 18 or higher are
+% needed for the run to actually succeed at reaching all waypoints. There
+% were also a few edge cases where it no gain in these ranges led to 
+% convergence. Notably, Kp seems to matter more than Kd for whether or not
+% a run will actually converge. 
+% The best results seemed to appear between Kp = 23:25. Kd doesn't
+% seem to matter significantly, though the most commmon values were 
+% clustered at low Kd values (4:6). However, for these Kd values, sometimes
+% the simulation would not converge. The next cluster appeared at 
+% Kd = 15:18, so we decided Next step: testing 
+% Kp = 23:25 and Kd = 2:6 at increments of 0.1.
+% 
+% Median results for minimized total error:
+% Kp = 24.9, Kd = 15.1
 
-% Testing Kp_range = 23:1:50, Kd_range = 23:1:50 yielded higher error than
-% Kp_range = 18:1:23, Kd_range = 18:1:23
+%% Monte Carlo
 
-% Assuming that error is generally monotonically increasing/decreasing 
-% over the plot of Kp/Kd/error, this means the optimal values are probably
-% somewhere in the range of Kp_range = 18:1:25, Kd_range = 10:1:25
-% (expanded from the previous range just for coverage).
-
-% Simulation does not consistently converge until Kp = 20 or so; any Kd in
-% the given range seems to work, but the errors seem to be minimized
-% between Kd_range = 18:1:22.
-
-% Running a simulation 100 trials, for Kp_range = 20:0.1:22, 
-% Kd_range = 18:0.1:22 yielded a minimized error in the range:
-% Kp = [,]; Kd = [,]
+% NOTE: RUNNING OPTIMIZE.M REQUIRES COMMENTING OUT CLEAR, CLC, CLOSEALL IN
+% DRONE_SIM.M. CHANGING THE PLOT SETTINGS IN INITIALIZE.M IS ALSO ADVISED.
 
 clear
 clc
 close all
 
-monte_carlo = 100;
+monte_carlo = 1;
 run_min = zeros(monte_carlo, 3); % Kp: 1; Kd: 2; min err sum: 3
 
 for run_num = 1:monte_carlo
     initialize_sim
-    Kp_range = 20:0.1:22;
-    Kd_range = 18:0.1:22;
 
-    dK = 0.5;
     err_sum = zeros(length(Kp_range), length(Kd_range));
     Kp = Kp_range(1);
     Kd = Kd_range(1);
@@ -39,7 +42,7 @@ for run_num = 1:monte_carlo
     for Kp_iter = 1:length(Kp_range)
         Kp = Kp_range(Kp_iter);
         for Kd_iter = 1:length(Kd_range)
-            Kd = Kd_range(Kd_iter);
+            Kd = Kd_range(Kp_iter);
             drone_sim
             if j < num_wp
                 err_sum(Kp_iter, Kd_iter) = 100000000;
