@@ -1,67 +1,78 @@
 %% Guidance Example -- Random Waypoints
 
-n = [3,10,23];
-n = 23;
-m = 20000; % number of random permutations to sample
+% user inputs
+n = 11;     % number of random waypoints
+m = 20000;  % number of random permutations to sample
 
-for i = 1:length(n)
-    % generate random waypoints uniformly in [-5,5]x[-5,5]x[0,2]
-    waypoints = (rand(3,n(i))-[0.5;0.5;0]).*[10;10;2];
-    waypoints(:,1) = [0;0;1]; % default origin
-    adj_matrix = make_graph(waypoints);
-    tic
-    [order,min_dist] = tsp_dp(adj_matrix,1);
-    toc
-    [order_nn,dist_nn] = tsp_nn(adj_matrix,1);
+% generate random waypoints uniformly in [-5,5]x[-5,5]x[0,2]
+waypoints = (rand(3,n)-[0.5;0.5;0]).*[10;10;2];
+waypoints(:,1) = [0;0;1]; % default origin
 
-    rand_dist = zeros(1,m);
-    for j = 1:m
-        rand_ord = [1,randperm(n(i)-1)+1];
-        rand_dist(j) = sum(vecnorm(diff(waypoints(:,rand_ord),1,2)));
-    end
-    fig_hist = figure(Position=[200,200,560,420*0.75]);
-    histogram(rand_dist);
-    hold on;
-    xline(min_dist,'--r',sprintf("(d_{min}) %.1f",min_dist), ...
-        LineWidth=1.5);
-    xline(dist_nn,'--r',sprintf("(d_{nn}) %.1f",dist_nn), ...
-        LineWidth=1.5);
-    xline(mean(rand_dist),'--r', ...
-        sprintf("%.1f",mean(rand_dist)), ...
-        LineWidth=1.5);
-    hold off;
-    xlabel("Path Length");
-    ylabel("Occurrences");
-    grid on
-    set(gca,GridAlpha=0.5);
+%% Main Algorithms
 
-    exportgraphics(fig_hist,"figs/hist_rand_seq.png",Resolution=300);
+% generate DP and NN solutions
+adj_matrix = make_graph(waypoints);
+tic
+[order_dp,dist_dp] = tsp_dp(adj_matrix,1);
+toc
+fprintf("Optimal order:")
+order_dp
+[order_nn,dist_nn] = tsp_nn(adj_matrix,1);
+
+% monte carlo random permutations
+rand_dist = zeros(1,m);
+for j = 1:m
+    rand_ord = [1,randperm(n-1)+1];
+    rand_dist(j) = sum(vecnorm(diff(waypoints(:,rand_ord),1,2)));
 end
 
-%% viz
+%% Monte Carlo Histogram
 
-path = waypoints(:,order);
+fig_hist = figure(Position=[200,200,560,420*0.75]);
+histogram(rand_dist);
+hold on;
+xline(dist_dp,'--r',sprintf("(d_{min}) %.1f",dist_dp), ...
+    LineWidth=1.5);
+xline(dist_nn,'--r',sprintf("(d_{nn}) %.1f",dist_nn), ...
+    LineWidth=1.5);
+xline(mean(rand_dist),'--r', ...
+    sprintf("%.1f",mean(rand_dist)), ...
+    LineWidth=1.5);
+hold off;
+xlabel("Path Length");
+ylabel("Occurrences");
+grid on
+set(gca,GridAlpha=0.5);
+
+exportgraphics(fig_hist,sprintf("figs/%d-hist_rand_seq.png",n), ...
+    Resolution=300);
+
+%% 3D Waypoint Animations
+
+path_dp = waypoints(:,order_dp);
 path_nn = waypoints(:,order_nn);
-dist = vecnorm(diff(path,1,2));
-frms = floor(dist.*6);
+dist = vecnorm(diff(path_dp,1,2)); % distances between each waypoint
+frms = floor(dist.*6); % frames per waypoint connection
 viz_path = zeros(3,sum(frms)+1);
+
+% discretize path for animation
 j = 1;
-for i = 1:n(end)-1
-    viz_path(1,j:j+frms(i)) = linspace(path(1,i),path(1,i+1),frms(i)+1);
-    viz_path(2,j:j+frms(i)) = linspace(path(2,i),path(2,i+1),frms(i)+1);
-    viz_path(3,j:j+frms(i)) = linspace(path(3,i),path(3,i+1),frms(i)+1);
+for i = 1:n-1
+    viz_path(1,j:j+frms(i)) = linspace(path_dp(1,i),path_dp(1,i+1),frms(i)+1);
+    viz_path(2,j:j+frms(i)) = linspace(path_dp(2,i),path_dp(2,i+1),frms(i)+1);
+    viz_path(3,j:j+frms(i)) = linspace(path_dp(3,i),path_dp(3,i+1),frms(i)+1);
     j = j+frms(i);
 end
 
-k_max = size(viz_path,2);
-dk = 48;
-daz = 4;
+k_max = sum(frms)+1; % total frames for animated trail
+dk = 48; % delta-k for length of animated trail
+daz = 4; % delta-az for spinning animation
 
-% fig
+% all animation: im (trail), im2 (spin with path), im3 (spin with no path)
 fig = figure(Position=[200,200,560*1.5,420*1.5]);
-scatter3(path(1,:),path(2,:),path(3,:),'o');
+scatter3(path_dp(1,:),path_dp(2,:),path_dp(3,:),'o');
 hold on
-plt3 = plot3(path(1,:),path(2,:),path(3,:),'r',LineWidth=1.5);
+plt3 = plot3(path_dp(1,:),path_dp(2,:),path_dp(3,:),'r',LineWidth=1.5);
 plt3_nn = plot3(path_nn(1,:),path_nn(2,:),path_nn(3,:),'--',Color=[0.3 0.5 0.3],LineWidth=1.5);
 hold off
 
@@ -91,7 +102,7 @@ for k = 1:k_max+dk
 end
 
 % fig
-set(plt3,XData=path(1,:),YData=path(2,:),ZData=path(3,:));
+set(plt3,XData=path_dp(1,:),YData=path_dp(2,:),ZData=path_dp(3,:));
 set(plt3_nn,XData=path_nn(1,:),YData=path_nn(2,:),ZData=path_nn(3,:));
 
 im2(1,1,1,360/daz) = 0;
@@ -116,6 +127,7 @@ for k = 1:360/daz
     im3(:,:,1,k) = rgb2ind(f.cdata,map,'nodither');
 end
 
-imwrite(im,map,'figs/comet.gif','DelayTime',0,'LoopCount',inf)
-imwrite(im2,map,'figs/spin.gif','DelayTime',0,'LoopCount',inf)
-imwrite(im3,map,'figs/spin_empty.gif','DelayTime',0,'LoopCount',inf)
+% write videos
+imwrite(im,map,sprintf("figs/%d-comet.gif",n),'DelayTime',0,'LoopCount',inf)
+imwrite(im2,map,sprintf("figs/%d-spin.gif",n),'DelayTime',0,'LoopCount',inf)
+imwrite(im3,map,sprintf("figs/%d-spin_empty.gif",n),'DelayTime',0,'LoopCount',inf)
