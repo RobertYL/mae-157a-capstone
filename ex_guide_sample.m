@@ -12,7 +12,7 @@ adj_matrix = make_graph([waypoint_map,origin]);
 order(1) = [];
 
 fprintf("Optimal order:")
-orderu
+order
 
 % send order to sim =>>
 

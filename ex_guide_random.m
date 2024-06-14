@@ -1,23 +1,24 @@
 %% Guidance Example -- Random Waypoints
 
 % user inputs
-n = 11;     % number of random waypoints
+n = 12;     % number of random waypoints
 m = 20000;  % number of random permutations to sample
 
 % generate random waypoints uniformly in [-5,5]x[-5,5]x[0,2]
 waypoints = (rand(3,n)-[0.5;0.5;0]).*[10;10;2];
-waypoints(:,1) = [0;0;1]; % default origin
+waypoints(:,1) = [0;0;1]; % default start
+waypoints(:,n) = [0;0;1]; % default end
 
 %% Main Algorithms
 
 % generate DP and NN solutions
 adj_matrix = make_graph(waypoints);
 tic
-[order_dp,dist_dp] = tsp_dp(adj_matrix,1);
+[order_dp,dist_dp] = tsp_dp(adj_matrix);
 toc
 fprintf("Optimal order:")
 order_dp
-[order_nn,dist_nn] = tsp_nn(adj_matrix,1);
+[order_nn,dist_nn] = tsp_nn(adj_matrix);
 
 % monte carlo random permutations
 rand_dist = zeros(1,m);

@@ -4,7 +4,7 @@
 
 function waypoint_map = import_waypoint(filename)
     waypoint_table = readtable(filename,VariableNamingRule="preserve");
-    [~,ord] = sort(waypoint_table.("seq num"));
+    [~,ord] = sort(waypoint_table.(1));
     
     % parse into X, Y, Z
     waypoint_X = waypoint_table.x(ord)';
